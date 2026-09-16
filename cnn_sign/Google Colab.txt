@@ -1,0 +1,90 @@
+import h5py  
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+import matplotlib.pyplot as plt
+
+# ===================== 1.加载数据集 =====================
+def load_dataset():
+    train_dataset = h5py.File('train_signs.h5', "r")
+    train_set_x_orig = np.array(train_dataset["train_set_x"][:])
+    train_set_y_orig = np.array(train_dataset["train_set_y"][:])
+
+    test_dataset = h5py.File('test_signs.h5', "r")
+    test_set_x_orig = np.array(test_dataset["test_set_x"][:])
+    test_set_y_orig = np.array(test_dataset["test_set_y"][:])
+
+    classes = np.array(test_dataset["list_classes"][:])
+
+    # 调整标签维度
+    train_set_y_orig = train_set_y_orig.reshape((1, train_set_y_orig.shape[0]))
+    test_set_y_orig = test_set_y_orig.reshape((1, test_set_y_orig.shape[0]))
+
+    return train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes
+
+
+X_train_orig, Y_train_orig, X_test_orig, Y_test_orig, classes = load_dataset()
+
+# 归一化像素 0~1
+X_train = X_train_orig / 255.
+X_test = X_test_orig / 255.
+
+# 转置标签，变成 (m,1)
+Y_train = Y_train_orig.T
+Y_test = Y_test_orig.T
+
+# 打印数据集形状
+print(f"训练集图片 shape: {X_train.shape}")
+print(f"测试集图片 shape: {X_test.shape}")
+print(f"训练标签 shape: {Y_train.shape}")
+print(f"测试标签 shape: {Y_test.shape}")
+print(f"类别数量: {len(classes)}")
+
+# ===================== 2.搭建CNN模型 =====================
+model = tf.keras.Sequential([
+    # 卷积层1 + 池化
+    tf.keras.layers.Conv2D(filters=8, kernel_size=(4, 4), strides=(1, 1), padding="same", activation="relu",input_shape=(64, 64, 3)),
+    tf.keras.layers.MaxPooling2D(pool_size=(8, 8), strides=(8, 8), padding="same"),
+
+    # 卷积层2 + 池化
+    tf.keras.layers.Conv2D(filters=16, kernel_size=(2, 2), strides=(1, 1), padding="same", activation="relu"),
+    tf.keras.layers.MaxPooling2D(pool_size=(4, 4), strides=(4, 4), padding="same"),
+
+    # 展平 + 输出层
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(units=6, activation="softmax")
+])
+
+# ===================== 3.编译模型 =====================
+model.compile(optimizer="adam",
+              loss="sparse_categorical_crossentropy",
+              metrics=["accuracy"])
+
+# 打印模型结构
+model.summary()
+
+# ===================== 4.训练模型 =====================
+history = model.fit(X_train, Y_train, epochs=100, batch_size=64, validation_data=(X_test, Y_test))
+
+# ===================== 5.评估测试集 =====================
+print("\n===== 在测试集上评估 =====")
+test_loss, test_acc = model.evaluate(X_test, Y_test)
+print(f"测试集损失 = {test_loss:.4f}")
+print(f"测试集准确率 = {test_acc:.4f}")
+
+# ===================== 6.绘制训练曲线 =====================
+plt.figure(figsize=(12,4))
+plt.subplot(1,2,1)
+plt.plot(history.history["accuracy"], label="train acc")
+plt.plot(history.history["val_accuracy"], label="val acc")
+plt.title("Accuracy")
+plt.xlabel("epoch")
+plt.legend()
+
+plt.subplot(1,2,2)
+plt.plot(history.history["loss"], label="train loss")
+plt.plot(history.history["val_loss"], label="val loss")
+plt.title("Loss")
+plt.xlabel("epoch")
+plt.legend()
+plt.show()
