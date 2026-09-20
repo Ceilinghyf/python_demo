@@ -130,3 +130,4 @@ plt.title("Loss")
 plt.xlabel("epoch")
 plt.legend()
 plt.show()   
+#11
