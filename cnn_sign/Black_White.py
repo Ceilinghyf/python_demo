@@ -40,4 +40,4 @@ f = plt.subplot(122)
 f.set_title('output featuremap', fontsize=15)
 plt.imshow(out, cmap='gray')
 plt.show()
-
+ #重新开始测试
