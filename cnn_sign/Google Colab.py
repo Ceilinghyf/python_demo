@@ -86,6 +86,7 @@ model = tf.keras.Sequential([
     tf.keras.layers.Flatten(),# Flatten展平层：把二维的特征图压扁成一维向量，送给后面全连接层
     tf.keras.layers.Dense(units=6, activation="softmax") # softmax 激活函数会把这 6 个数字经过指数运算和归一化，变成 6 个 0 到 1 之间的概率值，并且所有概率加起来等于 1。
     #二分类用sigmoid激活函数，输出0~1之间的概率值；多分类用softmax激活函数，输出每个类别的概率值，所有类别概率加起来等于1。
+    #测试结束 恢复初始化 方法
 ])
 
 # ===================== 3.编译模型 =====================
